@@ -1,0 +1,18 @@
+# Python environment
+venv/
+
+# Data lake (raw + processed)
+data/
+
+# Local secrets
+.env
+
+# Python cache
+__pycache__/
+
+# DuckDB files
+*.duckdb
+*.duckdb.wal
+
+# Jupyter notebook checkpoints
+.ipynb_checkpoints/
