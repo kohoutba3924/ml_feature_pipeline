@@ -1,0 +1,30 @@
+[project]
+name = "comfort_index_pipeline"
+version = "0.1.0"
+description = "A pipeline for ingesting, processing, and analyzing comfort index data."
+requires-python = ">=3.10"
+readme = "README.md"
+authors = [
+    { name = "Brett" }
+]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 88
+select = ["E", "F", "W", "I"]
+ignore = []
+exclude = ["tests"]
+
+[tool.black]
+line-length = 88
+target-version = ["py310"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

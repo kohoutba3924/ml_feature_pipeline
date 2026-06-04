@@ -16,3 +16,6 @@ __pycache__/
 
 # Jupyter notebook checkpoints
 .ipynb_checkpoints/
+
+# Egg directory
+*.egg-info/
