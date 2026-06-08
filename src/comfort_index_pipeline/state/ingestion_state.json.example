@@ -1,0 +1,17 @@
+{
+    "lcdv2_daily": {
+        "last_ingested_date": null
+    },
+    "lcdv2_hourly": {
+        "last_ingested_date": null
+    },
+    "acs": {
+        "last_ingested_year": null
+    },
+    "tiger_tracts": {
+        "last_ingested_year": null
+    },
+    "elevation": {
+        "last_ingested": null
+    }
+}

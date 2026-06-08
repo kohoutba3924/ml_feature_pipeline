@@ -8,6 +8,10 @@ authors = [
     { name = "Brett" }
 ]
 
+[project.urls]
+"Source" = "https://github.com/kohoutba3924/comfort_index_pipeline"
+
+
 [build-system]
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"

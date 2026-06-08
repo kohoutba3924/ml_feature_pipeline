@@ -1,5 +1,6 @@
-# Python environment
-venv/
+# Virtual environments
+venv_main/
+venv_dbt/
 
 # Data lake (raw + processed)
 data/
@@ -7,14 +8,23 @@ data/
 # Local secrets
 .env
 
+# State files
+src/comfort_index_pipeline/state/ingestion_state.json
+
 # Python cache
 __pycache__/
+*.pyc
 
-# DuckDB files
+
+# DuckDB database files
 *.duckdb
 *.duckdb.wal
 
-# Jupyter notebook checkpoints
+# dbt build artifacts
+dbt/target/
+dbt/logs/
+
+# Jupyter checkpoints
 .ipynb_checkpoints/
 
 # Egg directory

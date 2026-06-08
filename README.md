@@ -41,3 +41,20 @@ Expect structural changes, refactors, and incremental additions as development p
 - Data Modeling
 - Data Enablement/Governance
 - Application Engineering
+
+## Data Sources
+- NOAA Local Climatological Data (LCD)
+  - LCD Dataset Documentation: https://www.ncei.noaa.gov/oa/local-climatological-data/v2/doc/lcdv2_DOCUMENTATION.pdf
+
+- U.S. Census Bureau — TIGER/Line Shapefiles (Census Tracts)
+  - Shapefile: https://www2.census.gov/geo/tiger/TIGER2023/TRACT/
+  - TIGER/Line Technical Documentation: https://www2.census.gov/geo/pdfs/maps-data/data/tiger/tgrshp2023/TGRSHP2023_TechDoc.pdf 
+  
+- ACS 5‑Year Estimates
+  - Observations: https://api.census.gov/data/2023/acs/acs5 
+  - Metadata: https://api.census.gov/data/2023/acs/acs5/variables.html
+  - Technical Documentation: https://www.census.gov/programs-surveys/acs/technical-documentation.html 
+
+- USGS National Map Elevation Point Query Service (EPQS)
+  - API Documentation: https://nationalmap.gov/epqs/pqs.php
+  - Dataset Documentation: https://apps.nationalmap.gov/epqs/ 
