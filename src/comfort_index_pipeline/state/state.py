@@ -1,7 +1,5 @@
-# src/comfort_index_pipeline/state/state.py
-
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -34,11 +32,22 @@ class IngestionState:
 
     def _initialize_state(self) -> Dict[str, Any]:
         state = {
-            "lcdv2_daily": {"last_ingested_date": None},
-            "lcdv2_hourly": {"last_ingested_date": None},
-            "acs": {"last_ingested_year": None},
-            "tiger_tracts": {"last_ingested_year": None},
+            "lcdv2_daily_prior_years": {
+                "last_ingested_year": None,
+                "last_ingested_file": None,
+                "last_ingested": None,
+                "last_successful_full_run_timestamp": None,
+            },
+            "lcdv2_daily_current_year": {
+                "last_ingested_station": None,
+                "last_ingested": None,
+                "last_run_station_count": None,
+                "last_successful_full_run_timestamp": None,
+            },
+            "acs": {"last_ingested": None},
+            "tiger_tracts": {"last_ingested": None},
             "elevation": {"last_ingested": None},
+            "lcdv2_station_metadata": {"last_ingested": None},
         }
         self._write_state(state)
         return state
@@ -63,7 +72,7 @@ class IngestionState:
 
     def mark_ingested_now(self, dataset: str) -> None:
         """Convenience method for timestamping ingestion."""
-        timestamp = datetime.now(datetime.timezone.utc).isoformat()
+        timestamp = datetime.now(timezone.utc).isoformat()
         self.update(dataset, "last_ingested", timestamp)
 
 

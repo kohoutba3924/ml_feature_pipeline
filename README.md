@@ -2,7 +2,7 @@
 *A modular data engineering pipeline currently under active development.*
 
 ## Overview
-This repository contains the in‑progress implementation of a **Comfort Index data pipeline**, designed to ingest, clean, transform, and aggregate environmental, meteorological, geospatial, and census data into a unified Comfort Index metric.
+This repository contains the in‑progress implementation of a **Comfort Index data pipeline**, designed to ingest, clean, transform, and aggregate meteorological, geospatial, and census data into a Comfort Index ML Feature Store.
 
 The pipeline models production‑style data engineering patterns with a focus on:
 - A clean, maintainable **src‑based Python project structure**
@@ -21,34 +21,28 @@ Expect structural changes, refactors, and incremental additions as development p
 - Ingestion of multiple data sources  
 - Coverage filtering and data quality validation  
 - Transformation into standardized intermediate datasets  
-- Calculation of the Comfort Index using:
-  - Physiological discomfort factors  
-  - Human vulnerability modifiers  
-  - Derived metrics from available data sources  
 - Modular workflow execution with clear orchestration boundaries  
-- Extensible architecture for future data sources and model variations  
+- Extensible architecture for future data sources and model variations
+- Orchestrated refreshes and state mangement  
 
-## Short‑Term Roadmap
-- Finalize Phase 0 project scaffolding  
+## Short‑Term Roadmap  
 - Implement ingestion and coverage filtering modules  
 - Build transformation layer and intermediate data models  
-- Add Comfort Index computation logic  
-- Introduce workflow orchestration engine  
-- Expand test suite coverage  
+- Introduce test suite coverage
+- Introduce workflow orchestration engine   
 
 ## Competencies
 - Data Engineering
 - Data Modeling
-- Data Enablement/Governance
-- Application Engineering
 
 ## Data Sources
 - NOAA Local Climatological Data (LCD)
-  - LCD Dataset Documentation: https://www.ncei.noaa.gov/oa/local-climatological-data/v2/doc/lcdv2_DOCUMENTATION.pdf
+  - LCD Dataset Documentation: https://www.ncei.noaa.gov/products/land-based-station/local-climatological-data
+  - CDO API Documentation: https://www.ncdc.noaa.gov/cdo-web/webservices/v2
 
 - U.S. Census Bureau — TIGER/Line Shapefiles (Census Tracts)
-  - Shapefile: https://www2.census.gov/geo/tiger/TIGER2023/TRACT/
   - TIGER/Line Technical Documentation: https://www2.census.gov/geo/pdfs/maps-data/data/tiger/tgrshp2023/TGRSHP2023_TechDoc.pdf 
+  - Shapefiles: https://www2.census.gov/geo/tiger/TIGER2023/TRACT/
   
 - ACS 5‑Year Estimates
   - Observations: https://api.census.gov/data/2023/acs/acs5 
@@ -56,5 +50,5 @@ Expect structural changes, refactors, and incremental additions as development p
   - Technical Documentation: https://www.census.gov/programs-surveys/acs/technical-documentation.html 
 
 - USGS National Map Elevation Point Query Service (EPQS)
-  - API Documentation: https://nationalmap.gov/epqs/pqs.php
   - Dataset Documentation: https://apps.nationalmap.gov/epqs/ 
+  - API Documentation: https://nationalmap.gov/epqs/pqs.php

@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     )
 
     # -----------------------------
-    # Secrets (from .env)
+    # Secrets (defaults overwritten from .env)
     # -----------------------------
     ACS_API_KEY: str | None = None
     NOAA_API_KEY: str | None = None
@@ -40,20 +40,24 @@ class Settings(BaseSettings):
     # -----------------------------
     # LCDv2 Weather (Daily + Hourly)
     # -----------------------------
-    LCDV2_BULK_BASE_URL: str = (
+
+    # CDO API station metadata retrieval
+    LCDV2_STATIONS_ENDPOINT: str = "/stations"
+    LCDV2_LOCATION_FILTER: str = "FIPS:55"  # Wisconsin (derived from TIGER_STATE_FIPS)
+
+    # Bulk file access url (historical data by station and year)
+    LCDV2_PRIOR_YEAR_BASE_URL: str = (
         "https://www.ncei.noaa.gov/data/local-climatological-data/access"
     )
+    # Sets the number of years prior year historical data to retrieve
+    LCDV2_HISTORICAL_YEARS: int = 1
 
-    LCDV2_API_BASE_URL: str = "https://www.ncei.noaa.gov/cdo-web/api/v2"
+    # Daily file access url (used for pulling current year data by station & date range)
+    LCDV2_CURRENT_YEAR_BASE_URL: str = "https://www.ncei.noaa.gov/cdo-web/api/v2"
+    LCDV2_DATA_ENDPOINT: str = "/data"
+    LCDV2_DATASET_ID: str = "LCD"
 
-    LCDV2_STATION_METADATA_URL: str = (
-        "https://www.ncei.noaa.gov/pub/data/noaa/lcd/stations-lcd.csv"
-    )
-
-    LCDV2_HISTORICAL_YEARS: int = 3
-    LCDV2_STATE_FILTER: str = "WI"
-
-    # Finalized LCDv2 daily fields
+    # LCDv2 daily fields
     LCDV2_DAILY_FIELDS: list[str] = Field(
         default_factory=lambda: [
             # Temperature
@@ -81,7 +85,7 @@ class Settings(BaseSettings):
         ]
     )
 
-    # Finalized LCDv2 hourly fields
+    # LCDv2 hourly fields (source of deriving daily when daily value is NULL)
     LCDV2_HOURLY_FIELDS: list[str] = Field(
         default_factory=lambda: [
             # Temperature
@@ -110,7 +114,7 @@ class Settings(BaseSettings):
     TIGER_YEAR: int = 2024
 
     # -----------------------------
-    # ACS Demographics (Final Tier 1 + Tier 2)
+    # ACS Demographics
     # -----------------------------
     ACS_API_BASE_URL: str = "https://api.census.gov/data"
     ACS_YEAR: int = 2024
@@ -119,13 +123,13 @@ class Settings(BaseSettings):
     ACS_VARIABLES: list[str] = Field(
         default_factory=lambda: [
             # -------------------------
-            # Tier 1 — Core Demographics
+            # Core Demographics
             # -------------------------
             "B01001_001E",  # Total population
             "B01001_002E",  # Male population
             "B01001_026E",  # Female population
             # -------------------------
-            # Tier 1 — Household Composition
+            # Household Composition
             # -------------------------
             "B01001_020E",  # Male 65-66
             "B01001_021E",  # Male 67-69
@@ -145,7 +149,7 @@ class Settings(BaseSettings):
             "C18102_001E",  # Disability universe
             "C18102_002E",  # With disability
             # -------------------------
-            # Tier 1 — Education
+            # Education
             # -------------------------
             "B15003_017E",  # High school graduate
             "B15003_022E",  # Bachelor's degree
@@ -153,7 +157,7 @@ class Settings(BaseSettings):
             "B15003_024E",  # Professional school degree
             "B15003_025E",  # Doctorate degree
             # -------------------------
-            # Tier 1 — Socioeconomic Status
+            # Socioeconomic Status
             # -------------------------
             "B17001_001E",  # Poverty universe
             "B17001_002E",  # Below poverty line
@@ -168,7 +172,7 @@ class Settings(BaseSettings):
             "B25077_001E",  # Median home value
             "B25064_001E",  # Median gross rent
             # -------------------------
-            # Tier 1 — Minority Status & Language
+            # Minority Status & Language
             # -------------------------
             "B03002_001E",  # Race universe
             "B03002_003E",  # Black
@@ -182,7 +186,7 @@ class Settings(BaseSettings):
             "B16004_007E",  # Limited English proficiency (male)
             "B16004_014E",  # Limited English proficiency (female)
             # -------------------------
-            # Tier 1 — Housing & Transportation
+            # Housing & Transportation
             # -------------------------
             "B08201_001E",  # Vehicle availability universe
             "B08201_002E",  # No vehicle available
