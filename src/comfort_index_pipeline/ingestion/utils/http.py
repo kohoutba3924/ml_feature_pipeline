@@ -20,4 +20,4 @@ def get_http_session() -> requests.Session:
 
 
 SESSION = get_http_session()
-TIMEOUT = (5, 30)  # (connect timeout, read timeout)
+DEFAULT_TIMEOUT = (5, 30)  # (connect timeout, read timeout)

@@ -1,11 +1,12 @@
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List
 
 import pandas as pd
-import requests
 
 from comfort_index_pipeline.config.settings import settings
-from comfort_index_pipeline.state.state import ingestion_state
+from comfort_index_pipeline.ingestion.utils.http import DEFAULT_TIMEOUT, SESSION
+from comfort_index_pipeline.state.ingestion_state import ingestion_state
 
 
 def fetch_stations() -> List[Dict[str, Any]]:
@@ -28,7 +29,9 @@ def fetch_stations() -> List[Dict[str, Any]]:
     more_pages = True
 
     while more_pages:
-        response = requests.get(url, headers=headers, params=params)
+        response = SESSION.get(
+            url, headers=headers, params=params, timeout=DEFAULT_TIMEOUT
+        )
         response.raise_for_status()
 
         data = response.json()
@@ -97,9 +100,16 @@ def ingest_station_metadata() -> Path:
     Full ingestion pipeline for LCDv2 station metadata.
     """
     raw_stations = fetch_stations()
+
+    ingestion_state.mark_ingested_now("lcdv2_station_metadata")
+
     df_norm = normalize_station_metadata(raw_stations)
     output_path = save_station_metadata(df_norm)
 
-    ingestion_state.mark_ingested_now("lcdv2_station_metadata")
+    ingestion_state.update(
+        "lcdv2_station_metadata",
+        "last_successful_full_run_timestamp",
+        datetime.now(timezone.utc).isoformat(),
+    )
 
     return output_path

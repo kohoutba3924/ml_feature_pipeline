@@ -12,7 +12,7 @@ class IngestionState:
     Backed by a JSON file defined in settings.STATE_FILE_PATH.
     """
 
-    def __init__(self, state_file: Path = settings.STATE_FILE_PATH):
+    def __init__(self, state_file: Path = settings.INGESTION_STATE_FILE_PATH):
         self.state_file = state_file
         self.state: Dict[str, Any] = self._load_state()
 
@@ -32,22 +32,38 @@ class IngestionState:
 
     def _initialize_state(self) -> Dict[str, Any]:
         state = {
+            "lcdv2_station_metadata": {
+                "last_ingested": None,
+                "last_successful_full_run_timestamp": None,
+            },
             "lcdv2_daily_prior_years": {
                 "last_ingested_year": None,
                 "last_ingested_file": None,
                 "last_ingested": None,
                 "last_successful_full_run_timestamp": None,
             },
-            "lcdv2_daily_current_year": {
-                "last_ingested_station": None,
+            "acs_5yr": {
+                "last_ingested_year": None,
+                "last_ingested_variables": [],
                 "last_ingested": None,
-                "last_run_station_count": None,
                 "last_successful_full_run_timestamp": None,
             },
-            "acs": {"last_ingested": None},
-            "tiger_tracts": {"last_ingested": None},
-            "elevation": {"last_ingested": None},
-            "lcdv2_station_metadata": {"last_ingested": None},
+            "tiger_geospatial_tracts": {
+                "last_ingested_year": None,
+                "last_ingested_file": None,
+                "last_ingested": None,
+                "last_successful_full_run_timestamp": None,
+            },
+            "elevation_stations": {
+                "last_ingested": None,
+                "last_successful_full_run_timestamp": None,
+                "last_ingested_count": None,
+            },
+            "elevation_tracts": {
+                "last_ingested": None,
+                "last_successful_full_run_timestamp": None,
+                "last_ingested_count": None,
+            },
         }
         self._write_state(state)
         return state

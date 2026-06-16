@@ -1,18 +1,18 @@
 # src/comfort_index_pipeline/ingestion/lcdv2/daily_prior_years.py
 
-import time
+import re
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import date, datetime, timezone
 from pathlib import Path
 
 import pandas as pd
-from bs4 import BeautifulSoup
 
 from comfort_index_pipeline.config.settings import settings
-from comfort_index_pipeline.ingestion.utils.http import SESSION, TIMEOUT
-from comfort_index_pipeline.state.state import ingestion_state
+from comfort_index_pipeline.ingestion.utils.http import DEFAULT_TIMEOUT, SESSION
+from comfort_index_pipeline.state.ingestion_state import ingestion_state
 
 # ------------------------------------------------------------
-# Load target-state station list once at import time
+# Load target-state station list
 # (WBAN-based filtering)
 # ------------------------------------------------------------
 STATION_METADATA_PATH = settings.EXTERNAL_DATA_DIR / "lcdv2_stations.parquet"
@@ -29,7 +29,6 @@ TARGET_STATION_WBANS = set(df_stations["station"].str.replace("WBAN:", "", regex
 def get_years_to_ingest() -> list[int]:
     current_year = date.today().year
     years_back = settings.LCDV2_HISTORICAL_YEARS
-
     return list(range(current_year - years_back, current_year))
 
 
@@ -43,40 +42,37 @@ def extract_wban_from_filename(filename: str) -> str:
 
 
 # ------------------------------------------------------------
-# Scrape NOAA directory for daily files
+# Scrape NOAA directory for daily files (regex-based)
 # ------------------------------------------------------------
 def list_daily_files_for_year(year: int) -> list[str]:
+
+    print("Please wait: Collecting list of files for download.")
+
     base_url = settings.LCDV2_PRIOR_YEAR_BASE_URL
     url = f"{base_url}/{year}/"
 
-    response = SESSION.get(url, timeout=TIMEOUT)
+    response = SESSION.get(url, timeout=DEFAULT_TIMEOUT)
 
-    # If NOAA hasn't published this year yet, skip it gracefully
     if response.status_code == 404:
         print(f"  → Year {year} not available on NOAA (skipping).")
         return []
 
     response.raise_for_status()
 
-    soup = BeautifulSoup(response.text, "html.parser")
-    files = [
-        link.get("href")
-        for link in soup.find_all("a")
-        if link.get("href", "").endswith(".csv")
-    ]
-
-    return files
+    # Extract *.csv filenames from directory listing
+    return re.findall(r'href="([^"]+\.csv)"', response.text)
 
 
 # ------------------------------------------------------------
-# Download a single file with correct filename format
+# Worker: Download a single file
 # ------------------------------------------------------------
-def download_daily_file(year: int, scraped_filename: str, output_dir: Path) -> Path:
+def _download_worker(year: int, scraped_filename: str, output_dir: Path) -> str:
     """
-    NOAA lists files as: 01001099999.csv
-    Correct format should be: 01001099999-2025.csv
+    Downloads a single LCDv2 daily file and saves it with the normalized filename:
+        NOAA: 01001099999.csv
+        Saved: 01001099999-2025.csv
+    Returns the saved filename.
     """
-
     station_id = scraped_filename.replace(".csv", "")
     correct_filename = f"{station_id}-{year}.csv"
 
@@ -85,13 +81,13 @@ def download_daily_file(year: int, scraped_filename: str, output_dir: Path) -> P
 
     output_path = output_dir / correct_filename
 
-    response = SESSION.get(url, timeout=TIMEOUT)
+    response = SESSION.get(url, timeout=DEFAULT_TIMEOUT)
     response.raise_for_status()
 
     with open(output_path, "wb") as f:
         f.write(response.content)
 
-    return output_path, correct_filename
+    return correct_filename
 
 
 # ------------------------------------------------------------
@@ -100,12 +96,12 @@ def download_daily_file(year: int, scraped_filename: str, output_dir: Path) -> P
 def ingest_daily_raw() -> dict:
     years = get_years_to_ingest()
     results = {}
-    print(f"\n=== Retrieving LCDv2 daily files for years:  {years} ===")
+
+    print(f"\n=== Retrieving LCDv2 daily files for years: {years} ===")
 
     for year in years:
         print(f"\n=== Processing LCDv2 daily files for year {year} ===")
 
-        # Prepare output directory
         output_dir = settings.RAW_DATA_DIR / "lcdv2" / "daily" / str(year)
         output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -136,25 +132,37 @@ def ingest_daily_raw() -> dict:
 
         print(f"{len(missing)} target-state files missing for {year}.")
 
+        if not missing:
+            print(f"All files for {year} already exist — skipping downloads.")
+            results[year] = {
+                "total_files": len(target_files),
+                "downloaded": [],
+                "status": "already_exists",
+            }
+            continue
+
         downloaded = []
-        start_time = time.time()
+        total = len(missing)
+        completed = 0
 
-        for idx, (scraped_filename, expected_filename) in enumerate(missing, start=1):
-            try:
-                path, saved_name = download_daily_file(
-                    year, scraped_filename, output_dir
-                )
+        # --------------------------------------------------------
+        # Parallelized downloads
+        # --------------------------------------------------------
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            futures = [
+                executor.submit(_download_worker, year, scraped_filename, output_dir)
+                for scraped_filename, _ in missing
+            ]
+
+            for future in as_completed(futures):
+                saved_name = future.result()
                 downloaded.append(saved_name)
+                completed += 1
 
-                # Progress logging every 20 files
-                if idx % 20 == 0:
-                    elapsed = time.time() - start_time
-                    print(
-                        f"  → {idx}/{len(missing)} downloaded ({elapsed:.1f}s elapsed)"
-                    )
-
-            except Exception as e:
-                print(f"Failed to download {scraped_filename}: {e}")
+                # Progress logging every 10 files
+                if completed % 10 == 0 or completed == total:
+                    pct = (completed / total) * 100 if total > 0 else 100
+                    print(f"Processed {completed}/{total} files ({pct:.1f}%)")
 
         # Update ingestion state
         if downloaded:
@@ -169,10 +177,13 @@ def ingest_daily_raw() -> dict:
         results[year] = {
             "total_files": len(target_files),
             "downloaded": downloaded,
+            "status": "downloaded",
         }
+
     ingestion_state.update(
         "lcdv2_daily_prior_years",
         "last_successful_full_run_timestamp",
         datetime.now(timezone.utc).isoformat(),
     )
+
     return results

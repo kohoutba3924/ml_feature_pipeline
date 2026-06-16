@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     EXTERNAL_DATA_DIR: Path = DATA_DIR / "external"
     FEATURE_STORE_DIR: Path = DATA_DIR / "feature_store"
 
-    STATE_FILE_PATH: Path = (
+    INGESTION_STATE_FILE_PATH: Path = (
         PROJECT_ROOT
         / "src"
         / "comfort_index_pipeline"
@@ -31,11 +31,18 @@ class Settings(BaseSettings):
         / "ingestion_state.json"
     )
 
+    NORMALIZATION_STATE_FILE_PATH: Path = (
+        PROJECT_ROOT
+        / "src"
+        / "comfort_index_pipeline"
+        / "state"
+        / "normalization_state.json"
+    )
+
     # -----------------------------
     # Secrets (defaults overwritten from .env)
     # -----------------------------
     ACS_API_KEY: str | None = None
-    NOAA_API_KEY: str | None = None
 
     # -----------------------------
     # LCDv2 Weather (Daily + Hourly)
@@ -49,13 +56,8 @@ class Settings(BaseSettings):
     LCDV2_PRIOR_YEAR_BASE_URL: str = (
         "https://www.ncei.noaa.gov/data/local-climatological-data/access"
     )
-    # Sets the number of years prior year historical data to retrieve
-    LCDV2_HISTORICAL_YEARS: int = 1
-
-    # Daily file access url (used for pulling current year data by station & date range)
-    LCDV2_CURRENT_YEAR_BASE_URL: str = "https://www.ncei.noaa.gov/cdo-web/api/v2"
-    LCDV2_DATA_ENDPOINT: str = "/data"
-    LCDV2_DATASET_ID: str = "LCD"
+    # Sets the length of the historical data pull, non-inclusive of the current year
+    LCDV2_HISTORICAL_YEARS: int = 2
 
     # LCDv2 daily fields
     LCDV2_DAILY_FIELDS: list[str] = Field(
@@ -85,41 +87,22 @@ class Settings(BaseSettings):
         ]
     )
 
-    # LCDv2 hourly fields (source of deriving daily when daily value is NULL)
-    LCDV2_HOURLY_FIELDS: list[str] = Field(
-        default_factory=lambda: [
-            # Temperature
-            "HourlyDryBulbTemperature",
-            # Dew point / humidity
-            "HourlyDewPointTemperature",
-            "HourlyRelativeHumidity",
-            # Wind
-            "HourlyWindSpeed",
-            "HourlyWindDirection",
-            "HourlyWindGustSpeed",
-            # Precipitation
-            "HourlyPrecipitation",
-            # Visibility
-            "HourlyVisibility",
-            # Pressure
-            "HourlyStationPressure",
-        ]
-    )
-
     # -----------------------------
     # Census Tracts (TIGER/Line)
     # -----------------------------
-    TIGER_TRACT_BASE_URL: str = "https://www2.census.gov/geo/tiger/TIGER2024/TRACT"
-    TIGER_STATE_FIPS: str = "55"  # Wisconsin
-    TIGER_YEAR: int = 2024
+    TIGER_TRACT_YEAR: int = 2024
+    TIGER_TRACT_BASE_URL: str = "https://www2.census.gov/geo/tiger/TIGER{year}/TRACT"
+    TIGER_STATE_FIPS: str = "55"
 
     # -----------------------------
     # ACS Demographics
     # -----------------------------
-    ACS_API_BASE_URL: str = "https://api.census.gov/data"
     ACS_YEAR: int = 2024
+    ACS_API_BASE_URL: str = "https://api.census.gov/data"
     ACS_DATASET: str = "acs/acs5"
+    ACS_STATE_FIPS: str = "55"  # Wisconsin by default
 
+    ACS_VAR_CHUNK_SIZE: int = 50
     ACS_VARIABLES: list[str] = Field(
         default_factory=lambda: [
             # -------------------------
@@ -129,7 +112,7 @@ class Settings(BaseSettings):
             "B01001_002E",  # Male population
             "B01001_026E",  # Female population
             # -------------------------
-            # Household Composition
+            # Demographic Breakdown
             # -------------------------
             "B01001_020E",  # Male 65-66
             "B01001_021E",  # Male 67-69
@@ -146,8 +129,9 @@ class Settings(BaseSettings):
             "B01001_003E",  # Male under 5
             "B01001_027E",  # Female under 5
             "B01002_001E",  # Median age (total)
-            "C18102_001E",  # Disability universe
-            "C18102_002E",  # With disability
+            "B18101H_003E",  # Under 18 years with a disability
+            "B18101H_006E",  # 18 to 64 years with a disability
+            "B18101H_009E",  # 65 years and over with a disability
             # -------------------------
             # Education
             # -------------------------
@@ -162,10 +146,9 @@ class Settings(BaseSettings):
             "B17001_001E",  # Poverty universe
             "B17001_002E",  # Below poverty line
             "B19013_001E",  # Median household income
-            "B23025_003E",  # Labor force participation
-            "B23025_002E",  # Civilian labor force (denominator)
-            "B23025_005E",  # Unemployment count
-            "B23025_006E",  # Unemployment rate (denominator)
+            "B23025_002E",  # Labor force participation
+            "B23025_003E",  # Civilian labor force participation
+            "B23025_005E",  # Unemployment count - Civilian labor force
             "B25002_001E",  # Housing unit universe
             "B25002_002E",  # Occupied
             "B25002_003E",  # Vacant
@@ -175,27 +158,33 @@ class Settings(BaseSettings):
             # Minority Status & Language
             # -------------------------
             "B03002_001E",  # Race universe
-            "B03002_003E",  # Black
-            "B03002_004E",  # American Indian
-            "B03002_005E",  # Asian
-            "B03002_006E",  # Pacific Islander
-            "B03002_007E",  # Other race
-            "B03002_008E",  # Two or more races
+            "B03002_003E",  # White
+            "B03002_004E",  # Black
+            "B03002_005E",  # American Indian
+            "B03002_006E",  # Asian
+            "B03002_007E",  # Pacific Islander
             "B03002_012E",  # Hispanic or Latino
+            "B03002_008E",  # Other race
             "B16004_001E",  # Language universe
-            "B16004_007E",  # Limited English proficiency (male)
-            "B16004_014E",  # Limited English proficiency (female)
+            "B16004_022E",  # 5 to 17 years with limited English
+            "B16004_044E",  # 18 to 64 years with limited English
+            "B16004_066E",  # 65 years and over with limited English
+            "B16004_023E",  # 5 to 17 years with no English
+            "B16004_045E",  # 18 to 64 years with no English
+            "B16004_067E",  # 65 years and over with no English
             # -------------------------
             # Housing & Transportation
             # -------------------------
             "B08201_001E",  # Vehicle availability universe
             "B08201_002E",  # No vehicle available
             "B25024_001E",  # Housing structure universe
-            "B25024_003E",  # 3-4 unit structures
-            "B25024_004E",  # 5-9 unit structures
-            "B25024_005E",  # 10-19 unit structures
-            "B25024_006E",  # 20-49 unit structures
-            "B25024_007E",  # 50+ unit structures
+            "B25024_003E",  # 1 unit structures
+            "B25024_004E",  # 2 unit structures
+            "B25024_005E",  # 3-4 unit structures
+            "B25024_006E",  # 5-9 unit structures
+            "B25024_007E",  # 10-19 unit structures
+            "B25024_008E",  # 20-49 unit structures
+            "B25024_009E",  # 50+ unit structures
             "B25024_010E",  # Mobile homes
         ]
     )
@@ -203,8 +192,7 @@ class Settings(BaseSettings):
     # -----------------------------
     # Elevation (USGS)
     # -----------------------------
-    USGS_ELEVATION_API_URL: str = "https://nationalmap.gov/epqs/pqs.php"
-    ELEVATION_BATCH_SIZE: int = 100
+    USGS_ELEVATION_API_BASE_URL: str = "https://epqs.nationalmap.gov/v1/json"
 
     # -----------------------------
     # Pydantic v2 Settings Config
