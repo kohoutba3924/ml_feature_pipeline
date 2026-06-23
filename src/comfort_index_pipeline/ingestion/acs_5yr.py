@@ -7,6 +7,9 @@ from typing import Dict, List, Tuple
 
 from comfort_index_pipeline.config.settings import settings
 from comfort_index_pipeline.ingestion.utils.http import DEFAULT_TIMEOUT, SESSION
+
+# UPDATED: import the new metadata structure
+from comfort_index_pipeline.metadata_reference.acs5_variables import ACS5_VARIABLES
 from comfort_index_pipeline.state.ingestion_state import ingestion_state
 
 GeoKey = Tuple[str, str, str]  # (state, county, tract)
@@ -72,13 +75,10 @@ def merge_chunk_into_master(
     header = chunk_data[0]
     rows = chunk_data[1:]
 
-    # Identify geo columns (they should be at the end)
-    # Typically: ... , "state", "county", "tract"
     state_idx = header.index("state")
     county_idx = header.index("county")
     tract_idx = header.index("tract")
 
-    # Map variable names to their indices
     var_indices = {var: header.index(var) for var in chunk_vars}
 
     for row in rows:
@@ -101,7 +101,7 @@ def save_merged_acs_csv(
 ) -> None:
     """
     Saves the merged ACS data to a CSV file with columns:
-    state, county, tract, <variables in settings.ACS_VARIABLES order>
+    state, county, tract, <variables in ACS5_VARIABLES order>
     """
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -134,7 +134,10 @@ def ingest_acs_5yr() -> dict:
 
     year = settings.ACS_YEAR
     state_fips = settings.ACS_STATE_FIPS
-    variables = settings.ACS_VARIABLES
+
+    # UPDATED: use metadata_reference instead of settings.ACS_VARIABLES
+    variables = list(ACS5_VARIABLES.keys())
+
     chunk_size = settings.ACS_VAR_CHUNK_SIZE
 
     print(f"\n=== Processing ACS 5-year data for {year} (state {state_fips}) ===")
@@ -185,9 +188,12 @@ def ingest_acs_5yr() -> dict:
             print(f"Failed to merge ACS data for chunk {i}: {e}")
             return {"status": "failed", "error": str(e), "chunk": i}
 
-    # All chunks fetched and merged in memory: update first three state fields
+    # All chunks fetched and merged in memory
     ingestion_state.update("acs_5yr", "last_ingested_year", year)
+
+    # UPDATED: store the raw variable list from metadata_reference
     ingestion_state.update("acs_5yr", "last_ingested_variables", variables)
+
     ingestion_state.mark_ingested_now("acs_5yr")
 
     # Save merged CSV

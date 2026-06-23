@@ -2,7 +2,6 @@
 
 from pathlib import Path
 
-from pydantic import Field
 from pydantic_settings import BaseSettings
 
 
@@ -48,44 +47,15 @@ class Settings(BaseSettings):
     # LCDv2 Weather (Daily + Hourly)
     # -----------------------------
 
-    # CDO API station metadata retrieval
-    LCDV2_STATIONS_ENDPOINT: str = "/stations"
-    LCDV2_LOCATION_FILTER: str = "FIPS:55"  # Wisconsin (derived from TIGER_STATE_FIPS)
-
     # Bulk file access url (historical data by station and year)
     LCDV2_PRIOR_YEAR_BASE_URL: str = (
         "https://www.ncei.noaa.gov/data/local-climatological-data/access"
     )
+    # NOAA API station metadata retrieval
+    LCDV2_STATIONS_ENDPOINT: str = "/stations"
+    LCDV2_LOCATION_FILTER: str = "FIPS:55"  # Wisconsin (derived from TIGER_STATE_FIPS)
     # Sets the length of the historical data pull, non-inclusive of the current year
     LCDV2_HISTORICAL_YEARS: int = 2
-
-    # LCDv2 daily fields
-    LCDV2_DAILY_FIELDS: list[str] = Field(
-        default_factory=lambda: [
-            # Temperature
-            "DailyMaximumDryBulbTemperature",
-            "DailyMinimumDryBulbTemperature",
-            "DailyAverageDryBulbTemperature",
-            "DailyDepartureFromNormalAverageTemperature",
-            # Dew point / humidity
-            "DailyAverageDewPointTemperature",
-            "DailyAverageRelativeHumidity",
-            # Wind
-            "DailyPeakWindSpeed",
-            "DailyPeakWindDirection",
-            # Precipitation / snow
-            "DailyPrecipitation",
-            "DailySnowfall",
-            "DailySnowDepth",
-            # Visibility
-            "DailyMinimumVisibility",
-            # Pressure
-            "DailyAverageStationPressure",
-            # Weather codes / sky condition
-            "DailyWeatherCodes",
-            "DailySkyCondition",
-        ]
-    )
 
     # -----------------------------
     # Census Tracts (TIGER/Line)
@@ -101,93 +71,7 @@ class Settings(BaseSettings):
     ACS_API_BASE_URL: str = "https://api.census.gov/data"
     ACS_DATASET: str = "acs/acs5"
     ACS_STATE_FIPS: str = "55"  # Wisconsin by default
-
     ACS_VAR_CHUNK_SIZE: int = 50
-    ACS_VARIABLES: list[str] = Field(
-        default_factory=lambda: [
-            # -------------------------
-            # Core Demographics
-            # -------------------------
-            "B01001_001E",  # Total population
-            "B01001_002E",  # Male population
-            "B01001_026E",  # Female population
-            # -------------------------
-            # Demographic Breakdown
-            # -------------------------
-            "B01001_020E",  # Male 65-66
-            "B01001_021E",  # Male 67-69
-            "B01001_022E",  # Male 70-74
-            "B01001_023E",  # Male 75-79
-            "B01001_024E",  # Male 80-84
-            "B01001_025E",  # Male 85+
-            "B01001_044E",  # Female 65-66
-            "B01001_045E",  # Female 67-69
-            "B01001_046E",  # Female 70-74
-            "B01001_047E",  # Female 75-79
-            "B01001_048E",  # Female 80-84
-            "B01001_049E",  # Female 85+
-            "B01001_003E",  # Male under 5
-            "B01001_027E",  # Female under 5
-            "B01002_001E",  # Median age (total)
-            "B18101H_003E",  # Under 18 years with a disability
-            "B18101H_006E",  # 18 to 64 years with a disability
-            "B18101H_009E",  # 65 years and over with a disability
-            # -------------------------
-            # Education
-            # -------------------------
-            "B15003_017E",  # High school graduate
-            "B15003_022E",  # Bachelor's degree
-            "B15003_023E",  # Master's degree
-            "B15003_024E",  # Professional school degree
-            "B15003_025E",  # Doctorate degree
-            # -------------------------
-            # Socioeconomic Status
-            # -------------------------
-            "B17001_001E",  # Poverty universe
-            "B17001_002E",  # Below poverty line
-            "B19013_001E",  # Median household income
-            "B23025_002E",  # Labor force participation
-            "B23025_003E",  # Civilian labor force participation
-            "B23025_005E",  # Unemployment count - Civilian labor force
-            "B25002_001E",  # Housing unit universe
-            "B25002_002E",  # Occupied
-            "B25002_003E",  # Vacant
-            "B25077_001E",  # Median home value
-            "B25064_001E",  # Median gross rent
-            # -------------------------
-            # Minority Status & Language
-            # -------------------------
-            "B03002_001E",  # Race universe
-            "B03002_003E",  # White
-            "B03002_004E",  # Black
-            "B03002_005E",  # American Indian
-            "B03002_006E",  # Asian
-            "B03002_007E",  # Pacific Islander
-            "B03002_012E",  # Hispanic or Latino
-            "B03002_008E",  # Other race
-            "B16004_001E",  # Language universe
-            "B16004_022E",  # 5 to 17 years with limited English
-            "B16004_044E",  # 18 to 64 years with limited English
-            "B16004_066E",  # 65 years and over with limited English
-            "B16004_023E",  # 5 to 17 years with no English
-            "B16004_045E",  # 18 to 64 years with no English
-            "B16004_067E",  # 65 years and over with no English
-            # -------------------------
-            # Housing & Transportation
-            # -------------------------
-            "B08201_001E",  # Vehicle availability universe
-            "B08201_002E",  # No vehicle available
-            "B25024_001E",  # Housing structure universe
-            "B25024_003E",  # 1 unit structures
-            "B25024_004E",  # 2 unit structures
-            "B25024_005E",  # 3-4 unit structures
-            "B25024_006E",  # 5-9 unit structures
-            "B25024_007E",  # 10-19 unit structures
-            "B25024_008E",  # 20-49 unit structures
-            "B25024_009E",  # 50+ unit structures
-            "B25024_010E",  # Mobile homes
-        ]
-    )
 
     # -----------------------------
     # Elevation (USGS)

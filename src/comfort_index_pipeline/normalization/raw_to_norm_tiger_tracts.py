@@ -1,6 +1,5 @@
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
 
 import geopandas as gpd
 import pandas as pd
@@ -9,40 +8,33 @@ from comfort_index_pipeline.config.settings import settings
 from comfort_index_pipeline.state.normalization_state import normalization_state
 
 
-def _get_latest_tiger_tracts_year(raw_base_dir: Path) -> Optional[int]:
+def _get_shapefile_path() -> Path:
     """
-    Returns the latest available year for TIGER tracts in the raw directory,
-    or None if no year directories are found.
+    Returns the deterministic path to the TIGER tract shapefile for the configured year.
+
+    Expected structure:
+        RAW_DATA_DIR / "tiger_geospatial_tracts" / <year> / tl_<year>_<state>_tract.shp
     """
-    if not raw_base_dir.exists():
-        return None
+    year = settings.TIGER_TRACT_YEAR
+    state_fips = settings.TIGER_STATE_FIPS
 
-    years = []
-    for child in raw_base_dir.iterdir():
-        if child.is_dir():
-            try:
-                years.append(int(child.name))
-            except ValueError:
-                continue
+    base_dir = settings.RAW_DATA_DIR / "tiger_geospatial_tracts" / str(year)
 
-    return max(years) if years else None
+    # Allow flexibility in filename pattern (Census uses tl_<year>_<state>_tract.shp)
+    candidates = list(base_dir.glob(f"tl_{year}_{state_fips}_tract.shp"))
 
-
-def _get_shapefile_path_for_year(raw_base_dir: Path, year: int) -> Path:
-    """
-    Returns the path to the TIGER tract shapefile for the given year.
-    Assumes files are under: raw_base_dir / <year> / tl_<year>_<state>_tract.shp
-    """
-    year_dir = raw_base_dir / str(year)
-    # We expect exactly one tract shapefile in that directory
-    candidates = list(year_dir.glob("tl_*_tract.shp"))
     if not candidates:
-        raise FileNotFoundError(f"No tract shapefile found in {year_dir}")
-    if len(candidates) > 1:
-        # If multiple, take the first, but notify more found than expected
-        print(
-            f"Warning: multiple tract shapefiles found in {year_dir}, using {candidates[0].name}"
+        raise FileNotFoundError(
+            f"No TIGER tract shapefile found for year {year} and state {state_fips} "
+            f"under {base_dir}"
         )
+
+    if len(candidates) > 1:
+        print(
+            f"Warning: multiple tract shapefiles found for year {year} in {base_dir}, "
+            f"using {candidates[0].name}"
+        )
+
     return candidates[0]
 
 
@@ -50,29 +42,19 @@ def normalize_tiger_tracts() -> dict:
     """
     Normalizes TIGER tract shapefiles into a single Parquet file with:
     - tract identifiers
-    - centroids
+    - centroids (lat/lon)
     - bounding boxes
     - land/water area
     - WKB geometry
 
-    Uses the latest available raw year under data/raw/tiger_geospatial_tracts.
+    Uses the configured TIGER_TRACT_YEAR from settings.py.
     """
-    raw_base_dir = settings.RAW_DATA_DIR / "tiger_geospatial_tracts"
-    normalized_output_path = (
-        settings.NORMALIZED_DATA_DIR
-        / "tiger_geospatial_tracts"
-        / "tiger_geospatial_tracts.parquet"
-    )
+    year = settings.TIGER_TRACT_YEAR
+    state_fips = settings.TIGER_STATE_FIPS
 
-    print("\n=== Normalizing TIGER tracts ===")
+    print(f"\n=== Normalizing TIGER tracts for {year} (state {state_fips}) ===")
 
-    latest_year = _get_latest_tiger_tracts_year(raw_base_dir)
-    if latest_year is None:
-        raise RuntimeError(f"No TIGER tract raw data found under {raw_base_dir}")
-
-    print(f"Latest TIGER tract raw year detected: {latest_year}")
-
-    shapefile_path = _get_shapefile_path_for_year(raw_base_dir, latest_year)
+    shapefile_path = _get_shapefile_path()
     print(f"Loading TIGER tracts from: {shapefile_path}")
 
     gdf = gpd.read_file(shapefile_path)
@@ -93,12 +75,12 @@ def normalize_tiger_tracts() -> dict:
         raise RuntimeError(f"Missing expected TIGER columns: {missing}")
 
     # Reproject to a projected CRS for accurate geometry operations
-
     projected = gdf.to_crs(epsg=5070)
 
     # Accurate centroid
     projected["centroid"] = projected.geometry.centroid
-    # Bring centroids back to geographic CRS (WGS84) for lat/lon storage
+
+    # Convert centroids back to WGS84 for lat/lon
     centroids_geo = projected.set_geometry("centroid").to_crs(epsg=4326)
     gdf["centroid_lat"] = centroids_geo.geometry.y
     gdf["centroid_lon"] = centroids_geo.geometry.x
@@ -106,7 +88,7 @@ def normalize_tiger_tracts() -> dict:
     # Accurate area
     gdf["area_m2"] = projected.geometry.area
 
-    # Compute bounding box
+    # Bounding box
     bounds = gdf.geometry.bounds
     gdf["bbox_minx"] = bounds["minx"]
     gdf["bbox_miny"] = bounds["miny"]
@@ -140,22 +122,22 @@ def normalize_tiger_tracts() -> dict:
             "bbox_miny": gdf["bbox_miny"],
             "bbox_maxx": gdf["bbox_maxx"],
             "bbox_maxy": gdf["bbox_maxy"],
+            "area_m2": gdf["area_m2"],
             "geometry_wkb": gdf["geometry_wkb"],
         }
     )
 
-    # Ensure output directory exists
-    normalized_output_path.parent.mkdir(parents=True, exist_ok=True)
+    # Output path
+    output_path = settings.NORMALIZED_DATA_DIR / f"tiger_tracts_{year}.parquet"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
 
     # Save to Parquet
-    df_norm.to_parquet(normalized_output_path, index=False)
-    print(f"Saved normalized TIGER tracts to {normalized_output_path}")
+    df_norm.to_parquet(output_path, index=False)
+    print(f"Saved normalized TIGER tracts to {output_path}")
 
     # Update normalization state
     normalization_state.mark_normalized_now("tiger_geospatial_tracts")
-    normalization_state.update(
-        "tiger_geospatial_tracts", "raw_year_normalized", latest_year
-    )
+    normalization_state.update("tiger_geospatial_tracts", "normalized_year", year)
     normalization_state.update(
         "tiger_geospatial_tracts",
         "last_successful_full_run_timestamp",
@@ -164,7 +146,7 @@ def normalize_tiger_tracts() -> dict:
 
     return {
         "status": "success",
-        "year": latest_year,
-        "path": str(normalized_output_path),
+        "year": year,
+        "path": str(output_path),
         "tract_count": len(df_norm),
     }

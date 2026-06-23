@@ -91,7 +91,7 @@ def test_download_tiger_geospatial_zip_failure(mock_session, tmp_path):
 
 
 # ------------------------------------------------------------
-# TEST D — extract_tiger_geospatial_zip()
+# Test for extract_tiger_geospatial_zip()
 # ------------------------------------------------------------
 
 
@@ -107,7 +107,7 @@ def test_extract_tiger_geospatial_zip(monkeypatch, tmp_path):
 
 
 # ------------------------------------------------------------
-# TEST E — ingest_tiger_geospatial_tracts() skip branch
+# Test for ingest_tiger_geospatial_tracts() skip branch
 # ------------------------------------------------------------
 
 
@@ -127,7 +127,7 @@ def test_ingest_tiger_geospatial_tracts_skip(monkeypatch, mock_settings, tmp_pat
 
 
 # ------------------------------------------------------------
-# TEST F — ingest_tiger_geospatial_tracts() success path
+# Test for ingest_tiger_geospatial_tracts() success path
 # ------------------------------------------------------------
 
 
@@ -164,7 +164,7 @@ def test_ingest_tiger_geospatial_tracts_success(
 
 
 # ------------------------------------------------------------
-# TEST G — ingest_tiger_geospatial_tracts() download failure
+# Test for ingest_tiger_geospatial_tracts() download failure
 # ------------------------------------------------------------
 
 
@@ -198,7 +198,7 @@ def test_ingest_tiger_geospatial_tracts_download_failure(
 
 
 # ------------------------------------------------------------
-# TEST H — ingest_tiger_geospatial_tracts() extraction failure
+# Test for ingest_tiger_geospatial_tracts() extraction failure
 # ------------------------------------------------------------
 
 

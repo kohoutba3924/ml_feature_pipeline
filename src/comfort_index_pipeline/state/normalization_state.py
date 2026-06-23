@@ -37,6 +37,11 @@ class NormalizationState:
                 "last_normalized": None,
                 "last_successful_full_run_timestamp": None,
             },
+            "lcdv2_hourly": {
+                "years_normalized": [],
+                "last_normalized": None,
+                "last_successful_full_run_timestamp": None,
+            },
             # Future normalized datasets will be added here:
             # "acs_5yr_normalized": {...},
         }
