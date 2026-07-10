@@ -1,0 +1,27 @@
+name: ml_feature_pipeline
+config-version: 2
+
+profile: ml_feature_pipeline
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+docs-paths: ["docs"]
+asset-paths: ["assets"]
+analysis-paths: ["analysis"]
+test-paths: ["tests"]
+
+packages-install-path: "dbt_packages"
+target-path: "target"
+
+models:
+  ml_feature_pipeline:
+    staging:
+      +materialized: table
+    intermediate:
+      +materialized: table
+    final:
+      +materialized: table
+
+clean-targets:
+  - target
+  - dbt_packages

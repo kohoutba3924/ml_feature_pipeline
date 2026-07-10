@@ -1,8 +1,8 @@
 import pytest
 import pandas as pd
 
-from comfort_index_pipeline.normalization import raw_to_norm_acs_5yr as norm
-from comfort_index_pipeline.metadata_reference.acs5_variables import ACS5_VARIABLES
+from ml_feature_pipeline.normalization import raw_to_norm_acs_5yr as norm
+from ml_feature_pipeline.metadata_reference.acs5_variables import ACS5_VARIABLES
 
 # ------------------------------------------------------------
 # FIXTURES
@@ -68,7 +68,7 @@ def test_normalize_skip_if_output_exists(mock_settings, tmp_path):
     raw_path.write_text("dummy")
 
     # Create normalized output file
-    output_path = tmp_path / "normalized" / "acs5_2024.parquet"
+    output_path = tmp_path / "normalized" / "acs5.parquet"
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text("exists")
 
@@ -160,7 +160,7 @@ def test_normalize_success(mock_settings, mock_ingestion_state, tmp_path):
     assert any(call[0] == "mark" for call in mock_ingestion_state.calls)
 
     # Check output parquet exists
-    output_path = tmp_path / "normalized" / "acs5_2024.parquet"
+    output_path = tmp_path / "normalized" / "acs5.parquet"
     assert output_path.exists()
 
     # Validate contents
@@ -202,7 +202,7 @@ def test_normalize_numeric_coercion(mock_settings, tmp_path):
     result = norm.normalize_acs_5yr()
     assert result["status"] == "success"
 
-    out_df = pd.read_parquet(tmp_path / "normalized" / "acs5_2024.parquet")
+    out_df = pd.read_parquet(tmp_path / "normalized" / "acs5.parquet")
 
     # All normalized fields should be NaN
     for norm_name in ACS5_VARIABLES.values():
@@ -230,7 +230,7 @@ def test_normalize_column_order(mock_settings, tmp_path):
 
     norm.normalize_acs_5yr()
 
-    out_df = pd.read_parquet(tmp_path / "normalized" / "acs5_2024.parquet")
+    out_df = pd.read_parquet(tmp_path / "normalized" / "acs5.parquet")
 
     expected_order = ["state", "county", "tract_code", "tract"] + list(
         ACS5_VARIABLES.values()

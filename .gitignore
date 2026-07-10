@@ -9,8 +9,8 @@ data/
 .env
 
 # State files
-src/comfort_index_pipeline/state/ingestion_state.json
-src/comfort_index_pipeline/state/normalization_state.json
+src/ml_feature_pipeline/state/ingestion_state.json
+src/ml_feature_pipeline/state/normalization_state.json
 
 # Python cache
 __pycache__/

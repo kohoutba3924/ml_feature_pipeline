@@ -1,8 +1,8 @@
-# Comfort Index Pipeline
+# ML Feature Pipeline
 *A modular data engineering pipeline currently under active development.*
 
 ## Overview
-This repository contains the in‑progress implementation of a **Comfort Index data pipeline**, designed to ingest, clean, transform, and aggregate meteorological, geospatial, and census data into a Comfort Index ML Feature Store.
+This repository contains the in‑progress implementation of a **Machine Learning data pipeline**, designed to ingest, clean, transform, and aggregate meteorological, geospatial, and census data into a ML Feature Store.
 
 The pipeline models production‑style data engineering patterns with a focus on:
 - A clean, maintainable **src‑based Python project structure**
@@ -26,7 +26,6 @@ Expect structural changes, refactors, and incremental additions as development p
 - Orchestrated refreshes and state mangement  
 
 ## Short‑Term Roadmap  
-- Implement ingestion and coverage filtering modules  
 - Build transformation layer and intermediate data models  
 - Introduce test suite coverage
 - Introduce workflow orchestration engine   

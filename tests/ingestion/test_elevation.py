@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 from pathlib import Path
 import pandas as pd
 
-from comfort_index_pipeline.ingestion import elevation
+from ml_feature_pipeline.ingestion import elevation
 
 # ------------------------------------------------------------
 # FIXTURES

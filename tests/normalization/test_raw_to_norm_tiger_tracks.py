@@ -3,7 +3,7 @@ import pandas as pd
 import geopandas as gpd
 from shapely.geometry import Polygon
 
-from comfort_index_pipeline.normalization import raw_to_norm_tiger_tracts as norm
+from ml_feature_pipeline.normalization import raw_to_norm_tiger_tracts as norm
 
 # ------------------------------------------------------------
 # FIXTURES

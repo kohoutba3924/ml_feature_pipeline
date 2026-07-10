@@ -1,7 +1,7 @@
 [project]
-name = "comfort_index_pipeline"
+name = "ml_feature_pipeline"
 version = "0.1.0"
-description = "A pipeline for ingesting, processing, and modeling geospatial comfort index data."
+description = "A pipeline for ingesting, processing, and modeling geospatial data."
 requires-python = ">=3.10"
 readme = "README.md"
 authors = [

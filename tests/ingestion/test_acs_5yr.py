@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import MagicMock, patch, mock_open
 from pathlib import Path
 
-from comfort_index_pipeline.ingestion import acs_5yr as acs
+from ml_feature_pipeline.ingestion import acs_5yr as acs
 
 # ------------------------------------------------------------
 # FIXTURES

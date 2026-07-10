@@ -1,0 +1,53 @@
+version: 2
+
+sources:
+  - name: tiger
+    tables:
+      - name: tracts
+        external_location: "../data/normalized/tiger_geospatial_tracts.parquet"
+        file_format: parquet
+
+models:
+  - name: stg_tiger_tracts
+    description: >
+      Staging model for TIGER/Line census tracts. This model applies
+      type casting and ensures consistent GEOID formatting, tract centroid
+      coordinates (lat/lon), and bounding box fields. Geometry is retained in WKB
+      format exactly as produced by the Python normalization pipeline.
+
+    columns:
+      - name: tract
+        description: "11-digit Census Tract GEOID identifier."
+        tests:
+          - not_null
+          - unique
+
+      - name: state_fips
+        description: "2-digit state FIPS code."
+
+      - name: county_fips
+        description: "3-digit county FIPS code."
+
+      - name: tract_code
+        description: "6-digit tract code component of the GEOID."
+
+      - name: centroid_lat
+        description: "Latitude of the tract centroid."
+
+      - name: centroid_lon
+        description: "Longitude of the tract centroid."
+
+      - name: geometry_wkb
+        description: "Census tract geometry in Well-Known Binary (WKB) format."
+
+      - name: bbox_minx
+        description: "Minimum X coordinate of the tract bounding box."
+
+      - name: bbox_miny
+        description: "Minimum Y coordinate of the tract bounding box."
+
+      - name: bbox_maxx
+        description: "Maximum X coordinate of the tract bounding box."
+
+      - name: bbox_maxy
+        description: "Maximum Y coordinate of the tract bounding box."

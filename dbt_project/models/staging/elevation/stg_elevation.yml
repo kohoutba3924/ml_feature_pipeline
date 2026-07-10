@@ -1,0 +1,67 @@
+version: 2
+
+sources:
+  - name: elevation
+    tables:
+      - name: tract
+        external_location: "../data/raw/elevation/tract_elevation.parquet"
+        file_format: parquet
+
+      - name: station
+        external_location: "../data/raw/elevation/station_elevation.parquet"
+        file_format: parquet
+
+models:
+  - name: stg_tract_elevation
+    description: >
+      Staging model for tract-level elevation data. This model applies
+      type casting and ensures consistent GEOID and FIPS formatting
+      across elevation inputs. Elevation values are retained in meters
+      and centroid coordinates are preserved for debugging and spatial
+      validation. All fields reflect the normalized elevation output
+      produced by the Python ingestion pipeline.
+
+    columns:
+      - name: tract
+        description: "11-digit Census Tract GEOID identifier."
+        tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments:
+                to: ref('stg_tiger_tracts')
+                field: tract
+
+      - name: centroid_lat
+        description: "Latitude of the tract centroid used for elevation lookup."
+
+      - name: centroid_lon
+        description: "Longitude of the tract centroid used for elevation lookup."
+
+      - name: elevation_m
+        description: "Elevation in meters at the tract centroid."
+
+  - name: stg_station_elevation
+    description: >
+      Staging model for station-level elevation data. This model applies
+      type casting and ensures consistent FIPS formatting across station
+      elevation inputs. Elevation values are retained in meters and
+      centroid coordinates are preserved for debugging and spatial
+      validation. All fields reflect the normalized station elevation
+      output produced by the Python ingestion pipeline.
+
+    columns:
+      - name: station
+        description: "Unique station identifier."
+        tests:
+          - not_null
+          - unique
+
+      - name: latitude
+        description: "Latitude of the station centroid used for elevation lookup."
+
+      - name: longitude
+        description: "Longitude of the station centroid used for elevation lookup."
+
+      - name: elevation_m
+        description: "Elevation in meters at the station centroid."

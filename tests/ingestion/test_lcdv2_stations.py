@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 from pathlib import Path
 import pandas as pd
 
-from comfort_index_pipeline.ingestion.lcdv2 import stations as lcdv2_stations
+from ml_feature_pipeline.ingestion.lcdv2 import stations as lcdv2_stations
 
 # ------------------------------------------------------------
 # FIXTURES

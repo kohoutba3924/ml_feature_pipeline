@@ -1,0 +1,126 @@
+version: 2
+
+sources:
+  - name: lcdv2
+    tables:
+      - name: hourly
+        # Directory of partitioned Parquet files
+        external_location: "../data/normalized/lcdv2/"
+        file_format: parquet
+
+      - name: station
+        external_location: "../data/external/lcdv2_stations.parquet"
+        file_format: parquet
+
+models:
+  - name: stg_lcdv2_hourly
+    description: >
+      Staging model for LCDV2 hourly meteorological observations.
+      Raw LCDV2 values are provided in SI units (°C, m/s, mm, km, hPa)
+      with tenths/thousandths precision. This staging model converts
+      all weather variables to US units (°F, mph, inches, miles, inHg)
+      while preserving column names. Elevation and distance remain in
+      meters elsewhere in the pipeline for weighting calculations.
+
+    columns:
+      - name: station
+        description: "WBAN station identifier associated with the hourly observation."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_lcdv2_station')
+                field: station
+
+      - name: timestamp
+        description: "Timestamp of the hourly observation."
+        tests:
+          - not_null
+
+      - name: dry_bulb_temp
+        description: >
+          Dry bulb temperature converted from degrees Celsius (degC, tenths)
+          to degrees Fahrenheit (°F).
+
+      - name: wet_bulb_temp
+        description: >
+          Wet bulb temperature converted from degrees Celsius (degC, tenths)
+          to degrees Fahrenheit (°F).
+
+      - name: dew_point_temp
+        description: >
+          Dew point temperature converted from degrees Celsius (degC, tenths)
+          to degrees Fahrenheit (°F).
+
+      - name: relative_humidity
+        description: "Relative humidity percentage."
+
+      - name: wind_speed
+        description: >
+          Wind speed converted from meters per second (m/s, tenths)
+          to miles per hour (mph).
+
+      - name: wind_direction
+        description: "Wind direction in degrees."
+
+      - name: wind_gust_speed
+        description: >
+          Wind gust speed converted from meters per second (m/s, tenths)
+          to miles per hour (mph).
+
+      - name: precipitation
+        description: >
+          Hourly precipitation converted from millimeters (mm, tenths)
+          to inches.
+
+      - name: visibility
+        description: >
+          Visibility converted from kilometers (km, thousandths)
+          to miles.
+
+      - name: station_pressure
+        description: >
+          Station pressure converted from hectopascals (hPa, tenths)
+          to inches of mercury (inHg).
+
+      - name: barometric_pressure
+        description: >
+          Barometric pressure converted from hectopascals (hPa, tenths)
+          to inches of mercury (inHg).
+
+
+  - name: stg_lcdv2_station
+    description: >
+      Staging model for LCDV2 station metadata. This model applies type
+      casting and preserves station identifiers, names, coordinates,
+      elevation, coverage metrics, and date ranges. All fields reflect
+      the normalized LCDV2 station metadata produced by the Python
+      ingestion pipeline.
+
+    columns:
+      - name: station
+        description: "WBAN station identifier."
+        tests:
+          - not_null
+          - unique
+
+      - name: name
+        description: "Human-readable station name."
+
+      - name: latitude
+        description: "Latitude of the station."
+
+      - name: longitude
+        description: "Longitude of the station."
+
+      - name: elevation
+        description: "Elevation of the station in meters."
+
+      - name: data_coverage
+        description: "Coverage score representing completeness of station data."
+
+      - name: min_date
+        description: "Earliest observation date available for the station."
+
+      - name: max_date
+        description: "Latest observation date available for the station."

@@ -1,0 +1,253 @@
+version: 2
+
+sources:
+  - name: acs
+    tables:
+      - name: five_year
+        external_location: "../data/normalized/acs5.parquet"
+        file_format: parquet
+
+models:
+  - name: stg_acs_5yr
+    description: >
+      Staging model for ACS 5-year estimates. This model applies type
+      casting and ensures consistent GEOID formatting across all ACS
+      demographic, socioeconomic, education, disability, language, and
+      housing variables. All fields reflect the normalized ACS output
+      produced by the Python ingestion pipeline. FIPS components
+      (state_fips, county_fips, tract_code) are retained for debugging
+      and validation purposes.
+
+    columns:
+      - name: tract
+        description: "11-digit Census Tract GEOID identifier."
+        tests:
+          - relationships:
+              arguments:
+                to: ref('stg_tiger_tracts')
+                field: tract
+
+      - name: state_fips
+        description: "2-digit state FIPS code extracted from GEOID."
+
+      - name: county_fips
+        description: "3-digit county FIPS code extracted from GEOID."
+
+      - name: tract_code
+        description: "6-digit tract code extracted from GEOID."
+
+      # -------------------------
+      # Core Demographics
+      # -------------------------
+      - name: population_total
+        description: "Total population for the tract."
+
+      - name: population_male
+        description: "Total male population."
+
+      - name: population_female
+        description: "Total female population."
+
+      # -------------------------
+      # Demographic Breakdown (65+)
+      # -------------------------
+      - name: male_65_66
+        description: "Male population ages 65-66."
+
+      - name: male_67_69
+        description: "Male population ages 67-69."
+
+      - name: male_70_74
+        description: "Male population ages 70-74."
+
+      - name: male_75_79
+        description: "Male population ages 75-79."
+
+      - name: male_80_84
+        description: "Male population ages 80-84."
+
+      - name: male_85_plus
+        description: "Male population ages 85+."
+
+      - name: female_65_66
+        description: "Female population ages 65-66."
+
+      - name: female_67_69
+        description: "Female population ages 67-69."
+
+      - name: female_70_74
+        description: "Female population ages 70-74."
+
+      - name: female_75_79
+        description: "Female population ages 75-79."
+
+      - name: female_80_84
+        description: "Female population ages 80-84."
+
+      - name: female_85_plus
+        description: "Female population ages 85+."
+
+      # -------------------------
+      # Under 5
+      # -------------------------
+      - name: male_under_5
+        description: "Male population under age 5."
+
+      - name: female_under_5
+        description: "Female population under age 5."
+
+      # -------------------------
+      # Median Age
+      # -------------------------
+      - name: median_age
+        description: "Median age for the tract."
+
+      # -------------------------
+      # Disability
+      # -------------------------
+      - name: disability_under_18
+        description: "Population under 18 with a disability."
+
+      - name: disability_18_64
+        description: "Population ages 18-64 with a disability."
+
+      - name: disability_65_plus
+        description: "Population ages 65+ with a disability."
+
+      # -------------------------
+      # Education
+      # -------------------------
+      - name: edu_high_school
+        description: "Population with a high school diploma."
+
+      - name: edu_bachelors
+        description: "Population with a bachelor's degree."
+
+      - name: edu_masters
+        description: "Population with a master's degree."
+
+      - name: edu_professional
+        description: "Population with a professional degree."
+
+      - name: edu_doctorate
+        description: "Population with a doctoral degree."
+
+      # -------------------------
+      # Socioeconomic Status
+      # -------------------------
+      - name: poverty_universe
+        description: "Population included in poverty determination."
+
+      - name: poverty_below
+        description: "Population below the poverty line."
+
+      - name: median_household_income
+        description: "Median household income."
+
+      - name: labor_force
+        description: "Total labor force."
+
+      - name: labor_force_civilian
+        description: "Civilian labor force."
+
+      - name: unemployment_civilian
+        description: "Unemployed civilian population."
+
+      - name: housing_units
+        description: "Total housing units."
+
+      - name: housing_occupied
+        description: "Occupied housing units."
+
+      - name: housing_vacant
+        description: "Vacant housing units."
+
+      - name: median_home_value
+        description: "Median home value."
+
+      - name: median_gross_rent
+        description: "Median gross rent."
+
+      # -------------------------
+      # Minority Status & Language
+      # -------------------------
+      - name: race_universe
+        description: "Population included in race classification."
+
+      - name: race_white
+        description: "White population."
+
+      - name: race_black
+        description: "Black or African American population."
+
+      - name: race_american_indian
+        description: "American Indian and Alaska Native population."
+
+      - name: race_asian
+        description: "Asian population."
+
+      - name: race_pacific_islander
+        description: "Native Hawaiian and Pacific Islander population."
+
+      - name: race_hispanic
+        description: "Hispanic or Latino population."
+
+      - name: race_other
+        description: "Population identifying as other race."
+
+      - name: language_universe
+        description: "Population included in language proficiency classification."
+
+      - name: limited_english_5_17
+        description: "Population ages 5-17 with limited English proficiency."
+
+      - name: limited_english_18_64
+        description: "Population ages 18-64 with limited English proficiency."
+
+      - name: limited_english_65_plus
+        description: "Population ages 65+ with limited English proficiency."
+
+      - name: no_english_5_17
+        description: "Population ages 5-17 who speak no English."
+
+      - name: no_english_18_64
+        description: "Population ages 18-64 who speak no English."
+
+      - name: no_english_65_plus
+        description: "Population ages 65+ who speak no English."
+
+      # -------------------------
+      # Housing & Transportation
+      # -------------------------
+      - name: vehicle_universe
+        description: "Population included in vehicle availability classification."
+
+      - name: vehicle_none
+        description: "Households with no available vehicle."
+
+      - name: housing_structure_universe
+        description: "Universe for housing structure classification."
+
+      - name: housing_1_unit
+        description: "Housing units: 1-unit detached or attached."
+
+      - name: housing_2_unit
+        description: "Housing units: 2-unit structures."
+
+      - name: housing_3_4_unit
+        description: "Housing units: 3-4 unit structures."
+
+      - name: housing_5_9_unit
+        description: "Housing units: 5-9 unit structures."
+
+      - name: housing_10_19_unit
+        description: "Housing units: 10-19 unit structures."
+
+      - name: housing_20_49_unit
+        description: "Housing units: 20-49 unit structures."
+
+      - name: housing_50_plus_unit
+        description: "Housing units: 50+ unit structures."
+
+      - name: housing_mobile_home
+        description: "Mobile home housing units."

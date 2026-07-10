@@ -3,7 +3,7 @@ import polars as pl
 from pathlib import Path
 from datetime import datetime
 
-from comfort_index_pipeline.normalization import raw_to_norm_lcdv2_hourly as norm
+from ml_feature_pipeline.normalization import raw_to_norm_lcdv2_hourly as norm
 
 # ------------------------------------------------------------
 # FIXTURES
@@ -108,7 +108,7 @@ def test_run_normalization_writes_parquet(
     mock_settings, mock_normalization_state, tmp_path, sample_csv
 ):
     # Create raw directory structure
-    raw_dir = tmp_path / "raw" / "lcdv2" / "daily" / "2025"
+    raw_dir = tmp_path / "raw" / "lcdv2" / "hourly" / "2025"
     raw_dir.mkdir(parents=True)
     sample_csv.rename(raw_dir / "72662604864-2025.csv")
 
@@ -143,7 +143,7 @@ def test_state_merges_years(
     mock_normalization_state.store = {"lcdv2_hourly": {"years_normalized": [2024]}}
 
     # Create raw directory structure
-    raw_dir = tmp_path / "raw" / "lcdv2" / "daily" / "2025"
+    raw_dir = tmp_path / "raw" / "lcdv2" / "hourly" / "2025"
     raw_dir.mkdir(parents=True)
     sample_csv.rename(raw_dir / "72662604864-2025.csv")
 

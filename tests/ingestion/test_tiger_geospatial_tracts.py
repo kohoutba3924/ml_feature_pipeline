@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 from pathlib import Path
 
-from comfort_index_pipeline.ingestion import tiger_geospatial_tracts as tiger
+from ml_feature_pipeline.ingestion import tiger_geospatial_tracts as tiger
 
 # ------------------------------------------------------------
 # FIXTURES
