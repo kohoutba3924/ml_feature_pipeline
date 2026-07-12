@@ -37,9 +37,6 @@ models:
       - name: centroid_lon
         description: "Longitude of the tract centroid."
 
-      - name: geometry_wkb
-        description: "Census tract geometry in Well-Known Binary (WKB) format."
-
       - name: bbox_minx
         description: "Minimum X coordinate of the tract bounding box."
 
@@ -51,3 +48,6 @@ models:
 
       - name: bbox_maxy
         description: "Maximum Y coordinate of the tract bounding box."
+
+      - name: geometry_wkb
+        description: "Census tract geometry in Well-Known Binary (WKB) format."

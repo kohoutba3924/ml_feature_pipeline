@@ -12,12 +12,13 @@ select
     cast(centroid_lat as float) as centroid_lat,
     cast(centroid_lon as float) as centroid_lon,
 
-    -- geometry_wkb is already normalized in Python
-    geometry_wkb,
-
+    -- geometry fields
     cast(bbox_minx as float) as bbox_minx,
     cast(bbox_miny as float) as bbox_miny,
     cast(bbox_maxx as float) as bbox_maxx,
-    cast(bbox_maxy as float) as bbox_maxy
+    cast(bbox_maxy as float) as bbox_maxy,
+
+    -- geometry_wkb is already normalized in Python
+    geometry_wkb
 
 from src

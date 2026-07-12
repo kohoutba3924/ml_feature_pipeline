@@ -26,8 +26,7 @@ Expect structural changes, refactors, and incremental additions as development p
 - Orchestrated refreshes and state mangement  
 
 ## Short‑Term Roadmap  
-- Build transformation layer and intermediate data models  
-- Introduce test suite coverage
+- Build transformation layer and intermediate data models
 - Introduce workflow orchestration engine   
 
 ## Competencies
