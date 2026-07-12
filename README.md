@@ -27,6 +27,7 @@ Expect structural changes, refactors, and incremental additions as development p
 
 ## Short‑Term Roadmap  
 - Build transformation layer and intermediate data models
+- Build final data models
 - Introduce workflow orchestration engine   
 
 ## Competencies
